@@ -1,53 +1,28 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import type { Anime, ApiResponse } from '@anisongdb/shared';
+import type { AppEnv } from './types.js';
+import pkg from '../package.json';
 
-// Type definition for Cloudflare bindings
-interface Env {
-    DB: D1Database;
-}
+// Middleware
+import { databaseMiddleware, errorHandler } from './middleware/index.js';
 
-const app = new Hono<{ Bindings: Env }>();
+// Routes
+import { songRoutes } from './routes/index.js';
 
-// Add CORS middleware
+const app = new Hono<AppEnv>();
+
+app.onError(errorHandler);
 app.use('*', cors());
+app.use('*', databaseMiddleware);
 
-// Health check
-app.get('/', (c) => {
+app.get('/api', (c) => {
     return c.json({
-        message: 'AnisongDB API is running',
-        version: '0.0.1',
+        message: `${pkg.name} is running`,
+        version: pkg.version,
     });
 });
 
-// Example: Get all anime (paginated)
-app.get('/anime', async (c) => {
-    try {
-        const limit = Number(c.req.query('limit')) || 20;
-        const offset = Number(c.req.query('offset')) || 0;
-
-        const results = await c.env.DB.prepare(
-            'SELECT * FROM anime LIMIT ? OFFSET ?'
-        )
-            .bind(limit, offset)
-            .all<Anime>();
-
-        const response: ApiResponse<Anime[]> = {
-            success: true,
-            data: results.results,
-        };
-
-        return c.json(response);
-    } catch (error) {
-        console.error('Database error:', error);
-        return c.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            } satisfies ApiResponse<never>,
-            500
-        );
-    }
-});
+// routes 
+app.route('/api/song', songRoutes);
 
 export default app;

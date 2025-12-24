@@ -13,5 +13,9 @@
     },
     "devDependencies": {
         "typescript": "^5.7.2"
+    },
+    "dependencies": {
+        "kysely": "^0.28.8",
+        "kysely-d1": "^0.4.0"
     }
 }

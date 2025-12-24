@@ -1,6 +1,6 @@
 {
     "name": "@anisongdb/api",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "type": "module",
     "scripts": {
         "dev": "wrangler dev",
@@ -8,11 +8,12 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@anisongdb/shared": "*",
         "hono": "^4.6.0",
-        "@anisongdb/shared": "*"
+        "kysely-d1": "^0.4.0"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20241205.0",
-        "wrangler": "^4.0.0"
+        "wrangler": "^4.56.0"
     }
 }
