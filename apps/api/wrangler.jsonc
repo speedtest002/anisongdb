@@ -3,17 +3,25 @@
     "name": "anisongdb-api",
     "main": "src/index.ts",
     "compatibility_date": "2025-03-07",
-    "compatibility_flags": [
-        "nodejs_compat"
-    ],
-    "observability": {
-        "enabled": true
-    },
+    "compatibility_flags": ["nodejs_compat"],
     "d1_databases": [
         {
             "binding": "DB",
             "database_name": "anisongdb",
             "database_id": "69522e3f-80de-4585-8e7b-45c16af4dbf9"
         }
-    ]
+    ],
+    "observability": {
+        "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+        },
+        "traces": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true
+        }
+    }
 }
