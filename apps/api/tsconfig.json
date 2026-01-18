@@ -1,20 +1,12 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "types": [
-            "@cloudflare/workers-types"
-        ],
-        "lib": [
-            "ES2022"
-        ],
+        "types": ["@cloudflare/workers-types", "node"],
+        "lib": ["ES2022"],
         "paths": {
-            "@anisongdb/shared": [
-                "../../packages/shared/src"
-            ]
+            "@anisongdb/shared": ["../../packages/shared/src"],
+            "@anisongdb/shared/schema": ["../../packages/shared/src/schema"]
         }
     },
-    "include": [
-        "src/**/*",
-        "../../packages/shared/src/db-schema.ts"    
-    ]
+    "include": ["src/**/*", "../../packages/shared/src/**/*"]
 }
