@@ -6,15 +6,16 @@
         "packages/*"
     ],
     "scripts": {
-        "dev:api": "bun run --filter ./apps/api dev",
-        "dev:web": "bun run --filter ./apps/web dev",
-        "build:api": "bun run --filter ./apps/api build",
-        "build:web": "bun run --filter ./apps/web build"
+        "dev:api": "npm run dev --workspace=apps/api",
+        "dev:web": "npm run dev --workspace=apps/web",
+        "build:api": "npm run build --workspace=apps/api",
+        "build:web": "npm run build --workspace=apps/web"
     },
     "devDependencies": {
         "typescript": "^5.7.2"
     },
     "dependencies": {
-        "drizzle-orm": "^0.45.1"
+        "kysely": "^0.28.8",
+        "kysely-d1": "^0.4.0"
     }
 }

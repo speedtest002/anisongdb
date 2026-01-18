@@ -32,4 +32,5 @@ export interface ApiResponse<T> {
 }
 
 export * from './song';
+export * from './db-schema';
 export * from './search';
