@@ -1,5 +1,5 @@
-import type { Kysely } from 'kysely';
-import type { Database } from '@anisongdb/shared';
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
+import type * as schema from './db/schema.js';
 
 /**
  * Cloudflare Workers environment bindings
@@ -12,7 +12,7 @@ export interface Env {
  * Hono context variables
  */
 export interface Variables {
-    db: Kysely<Database>;
+    db: DrizzleD1Database<typeof schema>;
 }
 
 /**
