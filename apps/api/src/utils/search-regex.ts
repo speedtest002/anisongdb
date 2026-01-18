@@ -2,12 +2,7 @@
  * Anime regex replacement rules for search term normalization
  * These rules handle special characters, Unicode variants, and common substitutions
  */
-
-// ================================================================
-// STATIC DATA - Computed once at module load
-// ================================================================
-
-const ANIME_REGEX_REPLACE_RULES: { input: string; replace: string }[] = [
+export const ANIME_REGEX_REPLACE_RULES: { input: string; replace: string }[] = [
     // Ļ can't lower correctly with sqlite lower function hence why next line is needed
     { input: 'ļ', replace: '[ļĻ]' },
     // Ł can't lower correctly with sqlite lower function
@@ -95,23 +90,44 @@ const ANIME_REGEX_REPLACE_RULES: { input: string; replace: string }[] = [
 ];
 
 /**
- * PRE-COMPILED RegExp objects for applyAnimeRegexRules
- * Saves ~86 RegExp constructor calls per request
+ * Applies ANIME_REGEX_REPLACE_RULES to transform a search term into a regex pattern
+ * that can match various Unicode and special character variants
+ *
+ * @param term - The search term to transform
+ * @returns A regex pattern string that matches variants of the input
  */
-const COMPILED_REGEX_RULES: { regex: RegExp; replace: string }[] =
-    ANIME_REGEX_REPLACE_RULES.map((rule) => ({
-        regex: new RegExp(
-            rule.input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-            'g',
-        ),
-        replace: rule.replace,
-    }));
+export function applyAnimeRegexRules(term: string): string {
+    let result = term.toLowerCase();
 
-/** Pre-compiled regex for escaping special chars */
-const ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
+    // Escape regex special characters first (except for chars we'll replace)
+    result = result.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Pre-compiled regex for FTS5 special chars */
-const FTS5_ESCAPE_REGEX = /["*^()]/g;
+    // Apply replacement rules in order
+    // Note: Order matters! Multi-character patterns (ou, uu, oo, etc.) should be processed first
+    for (const rule of ANIME_REGEX_REPLACE_RULES) {
+        // Escape the input for regex matching
+        const escapedInput = rule.input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedInput, 'g');
+        result = result.replace(regex, rule.replace);
+    }
+
+    return result;
+}
+
+/**
+ * Creates a SQL LIKE pattern or REGEXP pattern for searching
+ * This is useful for fuzzy matching in database queries
+ *
+ * @param term - The search term
+ * @returns The transformed search pattern
+ */
+export function createSearchPattern(term: string): string {
+    return applyAnimeRegexRules(term);
+}
+
+// ================================================================
+// FTS5 Search Variants Generation (derived from ANIME_REGEX_REPLACE_RULES)
+// ================================================================
 
 /**
  * Extract character variants from a regex replace pattern
@@ -123,127 +139,99 @@ function extractVariantsFromPattern(pattern: string): string[] {
     // Match characters inside [...] brackets
     const bracketMatch = pattern.match(/\[([^\]]+)\]/);
     if (bracketMatch) {
-        // Spread string chars directly - faster than split('')
-        for (const char of bracketMatch[1]) {
-            variants.push(char);
-        }
+        variants.push(...bracketMatch[1].split(''));
     }
 
     // Match alternatives inside (...) with |
     const parenMatch = pattern.match(/\(([^)]+)\)/);
     if (parenMatch) {
-        const parts = parenMatch[1].split('|');
-        for (let i = 0; i < parts.length; i++) {
-            variants.push(parts[i]);
-        }
+        variants.push(...parenMatch[1].split('|'));
     }
 
-    return variants;
+    return variants.filter((v) => v.length > 0);
 }
 
 /**
- * PRE-COMPUTED: Single-char rules with their extracted alternatives
- * Only includes rules where input.length === 1
- * Saves extractVariantsFromPattern() calls per request
+ * Build reverse character map from ANIME_REGEX_REPLACE_RULES
+ * Maps special characters back to their base form
+ *
+ * @example '@' → 'a', 'ō' → 'o'
  */
-interface PrecomputedVariantRule {
-    input: string;
-    singleCharAlts: string[]; // Pre-filtered: length===1 && !== input
-}
-
-function buildPrecomputedVariantRules(): PrecomputedVariantRule[] {
-    const rules: PrecomputedVariantRule[] = [];
+function buildReverseMapFromRules(): Map<string, string> {
+    const reverseMap = new Map<string, string>();
 
     for (const rule of ANIME_REGEX_REPLACE_RULES) {
+        // Only process single-character inputs for simple mapping
         if (rule.input.length !== 1) continue;
 
-        const alternatives = extractVariantsFromPattern(rule.replace);
-        const singleCharAlts: string[] = [];
-
-        for (let i = 0; i < alternatives.length; i++) {
-            const alt = alternatives[i];
-            if (alt.length === 1 && alt !== rule.input) {
-                singleCharAlts.push(alt);
+        const variants = extractVariantsFromPattern(rule.replace);
+        for (const variant of variants) {
+            // Only map single chars, skip if same as input
+            if (variant.length === 1 && variant !== rule.input) {
+                reverseMap.set(variant, rule.input);
             }
         }
-
-        if (singleCharAlts.length > 0) {
-            rules.push({ input: rule.input, singleCharAlts });
-        }
     }
 
-    return rules;
+    return reverseMap;
 }
 
-// ================================================================
-// GLOBAL SCOPE: Computed once at module load
-// ================================================================
-const PRECOMPUTED_VARIANT_RULES = buildPrecomputedVariantRules();
-
-// ================================================================
-// EXPORTED FUNCTIONS
-// ================================================================
+// Build once at module load
+const REVERSE_CHAR_MAP = buildReverseMapFromRules();
 
 /**
- * Applies ANIME_REGEX_REPLACE_RULES to transform a search term into a regex pattern
- * Uses PRE-COMPILED RegExp objects (no constructor calls per request)
+ * Normalize a search term by replacing special characters with their base form
+ * Example: "m@sterpiece" → "masterpiece"
  */
-export function applyAnimeRegexRules(term: string): string {
-    let result = term.toLowerCase();
-
-    // Escape regex special characters first
-    result = result.replace(ESCAPE_REGEX, '\\$&');
-
-    // Apply replacement rules using pre-compiled RegExp
-    for (let i = 0; i < COMPILED_REGEX_RULES.length; i++) {
-        const rule = COMPILED_REGEX_RULES[i];
-        result = result.replace(rule.regex, rule.replace);
+export function normalizeSearchTerm(term: string): string {
+    let normalized = term.toLowerCase();
+    for (const [special, base] of REVERSE_CHAR_MAP) {
+        normalized = normalized.split(special).join(base);
     }
-
-    return result;
+    return normalized;
 }
 
 /**
  * Generate search variants for FTS5 query
- * OPTIMIZED: Uses pre-computed variant rules, avoids per-request computation
+ * ONE-WAY: base chars (a,e,i,o,s) → special chars (@,3,1,0,$)
+ * Does NOT normalize special chars back to base
+ *
+ * @param term - Original search term (kept as-is)
+ * @returns Array of term variants for OR query
+ *
+ * @example
+ * generateSearchVariants("masterpiece")
+ * // → ["masterpiece", "m@sterpiece", "m4sterpiece", ...]
+ *
+ * generateSearchVariants("m@sterpiece")
+ * // → ["m@sterpiece"] (keeps @ as-is, only expands base chars if any)
  */
 export function generateSearchVariants(term: string): string[] {
     const inputTerm = term.toLowerCase();
     const variants = new Set<string>();
 
+    // Always include original term (as-is, just lowercased)
     variants.add(inputTerm);
 
-    // Add space <-> special character variants
-    // "spark again" -> "spark-again", "spark!again", etc. and vice versa
-    const specialChars = ['-', '!', ':', '~', '_', '.', ',', ';', '/', '\\'];
+    // Generate variants: base char → special chars (ONE-WAY only)
+    for (const rule of ANIME_REGEX_REPLACE_RULES) {
+        // Only use single-char inputs (base chars like a, e, i, o, s)
+        if (rule.input.length !== 1) continue;
+        if (!inputTerm.includes(rule.input)) continue;
 
-    if (inputTerm.includes(' ')) {
-        for (const char of specialChars) {
-            variants.add(inputTerm.replaceAll(' ', char));
-        }
-    }
+        // Extract ALL alternatives from the rule pattern
+        const alternatives = extractVariantsFromPattern(rule.replace);
 
-    // Replace special chars with space
-    for (const char of specialChars) {
-        if (inputTerm.includes(char)) {
-            variants.add(inputTerm.replaceAll(char, ' '));
-        }
-    }
+        // Filter to single chars only, exclude the base char itself
+        const singleCharAlts = alternatives.filter(
+            (a) => a.length === 1 && a !== rule.input,
+        );
 
-    // Use pre-computed rules instead of extracting variants each time
-    for (let i = 0; i < PRECOMPUTED_VARIANT_RULES.length; i++) {
-        const rule = PRECOMPUTED_VARIANT_RULES[i];
-
-        // Skip if input char not in term (fast check)
-        if (inputTerm.indexOf(rule.input) === -1) continue;
-
-        const alts = rule.singleCharAlts;
-        for (let j = 0; j < alts.length; j++) {
-            const alt = alts[j];
-            // Replace first occurrence
+        for (const alt of singleCharAlts) {
+            // Replace first occurrence only
             variants.add(inputTerm.replace(rule.input, alt));
-            // Replace all occurrences - replaceAll is V8 native
-            variants.add(inputTerm.replaceAll(rule.input, alt));
+            // Replace all occurrences
+            variants.add(inputTerm.split(rule.input).join(alt));
         }
     }
 
@@ -252,22 +240,24 @@ export function generateSearchVariants(term: string): string[] {
 
 /**
  * Build FTS5 query string from search variants
- * OPTIMIZED: Uses pre-compiled regex, manual string building
+ * Wraps each variant in quotes and joins with OR
+ *
+ * @param term - Original search term
+ * @param column - Optional column name to restrict search (e.g., 'song_name')
+ * @returns FTS5 query string like: "term1" OR "term2" OR column:"term1" OR column:"term2"
  */
 export function buildRegexReplaced(term: string, column?: string): string {
     const variants = generateSearchVariants(term);
-    const len = variants.length;
 
-    // Pre-allocate array (minor optimization)
-    const escaped: string[] = new Array(len);
-
-    for (let i = 0; i < len; i++) {
-        const clean = variants[i].replace(FTS5_ESCAPE_REGEX, ' ').trim();
-        escaped[i] = column ? `${column}:"${clean}"` : `"${clean}"`;
-    }
+    // Escape FTS5 special characters and wrap in quotes
+    const escaped = variants.map((v) => {
+        const clean = v.replace(/[\"*^:\-()]/g, ' ').trim();
+        // If column specified, prefix with column name
+        if (column) {
+            return `${column}:"${clean}"`;
+        }
+        return `"${clean}"`;
+    });
 
     return escaped.join(' OR ');
 }
-
-// Re-export for backwards compatibility
-export { ANIME_REGEX_REPLACE_RULES };
