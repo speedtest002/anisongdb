@@ -36,3 +36,4 @@ npm-debug.log*
 #Local stuff
 *.db
 .prettierrc
+.local
