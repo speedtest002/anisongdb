@@ -11,6 +11,7 @@ import {
 export const artist = sqliteTable('artist', {
     artistId: integer('artist_id').primaryKey(),
     name: text('name'),
+    nameNormalized: text('name_normalized'),
 });
 
 export const artistAltName = sqliteTable(
@@ -76,6 +77,7 @@ export const animeNames = sqliteTable(
         language: text('language'),
         name: text('name'),
         isMain: integer('is_main'),
+        nameNormalized: text('name_normalized'),
     },
     (table) => [
         uniqueIndex('idx_anime_names_unique').on(
@@ -90,6 +92,7 @@ export const animeNames = sqliteTable(
 export const groups = sqliteTable('groups', {
     groupId: integer('group_id').primaryKey(),
     name: text('name'),
+    nameNormalized: text('name_normalized'),
 });
 
 export const groupAltName = sqliteTable(
@@ -158,6 +161,7 @@ export const song = sqliteTable(
         composerGroupId: integer('composer_group_id'),
         arrangerGroupId: integer('arranger_group_id'),
         category: integer('category'),
+        nameNormalized: text('name_normalized'),
     },
     (table) => [
         index('idx_song_artist').on(table.songArtistId),
@@ -197,6 +201,64 @@ export const songUrls = sqliteTable(
         length: real('length'),
     },
     (table) => [index('idx_song_urls_ann_song_id').on(table.annSongId)],
+);
+
+export const songShortNames = sqliteTable(
+    'song_short_names',
+    {
+        songId: integer('song_id').primaryKey(),
+        name: text('name'),
+        nameNormalized: text('name_normalized'),
+    },
+    (table) => [
+        index('idx_song_short_song_id').on(table.songId),
+        index('idx_song_short_name').on(table.name),
+        index('idx_song_short_normalized').on(table.nameNormalized),
+    ],
+);
+
+export const animeShortNames = sqliteTable(
+    'anime_short_names',
+    {
+        annId: integer('ann_id').references(() => anime.annId),
+        language: text('language').notNull(),
+        name: text('name').notNull(),
+        nameNormalized: text('name_normalized').notNull(),
+    },
+    (table) => [
+        primaryKey({
+            columns: [table.annId, table.language, table.name],
+            name: 'anime_short_names_pk',
+        }),
+        index('idx_anime_short_name').on(table.name),
+        index('idx_anime_short_normalized').on(table.nameNormalized),
+    ],
+);
+
+export const artistShortNames = sqliteTable(
+    'artist_short_names',
+    {
+        artistId: integer('artist_id').primaryKey().references(() => artist.artistId),
+        name: text('name').notNull(),
+        nameNormalized: text('name_normalized').notNull(),
+    },
+    (table) => [
+        index('idx_artist_short_name').on(table.name),
+        index('idx_artist_short_normalized').on(table.nameNormalized),
+    ],
+);
+
+export const groupShortNames = sqliteTable(
+    'group_short_names',
+    {
+        groupId: integer('group_id').primaryKey().references(() => groups.groupId),
+        name: text('name').notNull(),
+        nameNormalized: text('name_normalized').notNull(),
+    },
+    (table) => [
+        index('idx_groups_short_name').on(table.name),
+        index('idx_groups_short_normalized').on(table.nameNormalized),
+    ],
 );
 
 export const songFullMat = sqliteTable(
@@ -255,22 +317,26 @@ export const songFullMat = sqliteTable(
 export const songSearch = sqliteTable('song_search', {
     rowid: integer('rowid').primaryKey(),
     name: text('name'),
+    nameNormalized: text('name_normalized'),
 });
 
 export const animeSearch = sqliteTable('anime_search', {
     rowid: integer('rowid').primaryKey(),
     name: text('name'),
     annId: integer('ann_id'),
+    nameNormalized: text('name_normalized'),
 });
 
 export const artistSearch = sqliteTable('artist_search', {
     rowid: integer('rowid').primaryKey(),
     name: text('name'),
+    nameNormalized: text('name_normalized'),
 });
 
 export const groupSearch = sqliteTable('group_search', {
     rowid: integer('rowid').primaryKey(),
     name: text('name'),
+    nameNormalized: text('name_normalized'),
 });
 
 export type Artist = typeof artist.$inferSelect;
