@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { sql, eq, or, and, getTableColumns } from 'drizzle-orm';
+import { sql, eq, or, getTableColumns } from 'drizzle-orm';
 import type { AppEnv } from '../types.js';
 import {
     songFullMat,
@@ -8,7 +8,6 @@ import {
     type SongFullMat,
 } from '../db/schema.js';
 import { normalizeName } from '../utils/normalize.js';
-import { SearchRequest } from '@anisongdb/shared';
 
 const songRoutes = new Hono<AppEnv>();
 
@@ -32,19 +31,20 @@ songRoutes.get('/annSongId/:annSongId', async (c) => {
 });
 
 /**
- * POST /song/search
+ * GET /song/search
+ * parram: name
  */
-songRoutes.post('/search', async (c) => {
-    const body: SearchRequest = await c.req.json();
-    const songName = body.songNameSearchFilter?.search?.trim() || '';
+songRoutes.get('/search', async (c) => {
+    const songName = c.req.query('name')?.trim() || '';
 
     if (songName.length === 0) {
         return c.json([]);
     }
     try {
+        console.log(songName);
         let results: SongFullMat[];
-        const normalizedName = normalizeName(songName);
-        if (normalizedName.isShort) {
+        const [isShort, nameNormalied] = normalizeName(songName);
+        if (isShort) {
             results = await c.var.db
                 .select({ ...getTableColumns(songFullMat) })
                 .from(songFullMat)
@@ -55,7 +55,7 @@ songRoutes.post('/search', async (c) => {
                 .where(
                     or(
                         eq(songShortNames.name, songName),
-                        eq(songShortNames.nameNormalized, normalizedName.name),
+                        eq(songShortNames.nameNormalized, nameNormalied),
                     ),
                 )
                 .execute();
@@ -65,7 +65,7 @@ songRoutes.post('/search', async (c) => {
                 .from(songFullMat)
                 .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
                 .where(
-                    sql`song_search MATCH ${`name:"${songName}" OR name_normalized:"${normalizedName.name}"`}`,
+                    sql`song_search MATCH ${`name:"${songName}" OR name_normalized:"${nameNormalied}"`}`,
                 )
                 .execute();
         }
