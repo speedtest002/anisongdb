@@ -286,13 +286,16 @@ function applyCharMap(str: string): string {
 }
 
 /**
- * @param name - Original name
- * @returns Normalized name if has >2 non-space chars
- *          null otherwise
+ * @param name string
+ *      input name
+ * @returns : { isShort: boolean, name: string }
+ * 
+ *      isShort: true if has <=2 chars, false if has >2 chars
+ *      name: Normalized name
  */
-export function normalizeName(name: string): string | null {
+export function normalizeName(name: string): { isShort: boolean, name: string } {
     if (!name) {
-        return null;
+        return { isShort: true, name: '' };
     }
 
     // Apply character mapping → lowercase → char_map again → lowercase
@@ -307,43 +310,10 @@ export function normalizeName(name: string): string | null {
     // Check if too short for trigram (count non-space chars)
     const nonSpaceCount = result.replace(/ /g, '').length;
     if (nonSpaceCount <= MIN_TRIGRAM_CHARS) {
-        return null;
+        return { isShort: true, name: result };
     }
 
-    return result;
-}
-
-export function normalizeNameShort(name: string): string | null {
-    if (!name) {
-        return null;
-    }
-
-    // Apply character mapping → lowercase → char_map again → lowercase
-    let result = applyCharMap(name);
-    result = result.toLowerCase();
-    result = applyCharMap(result);
-    result = result.toLowerCase();
-
-    // Collapse multiple spaces into single space and strip
-    result = result.split(/\s+/).filter(Boolean).join(' ');
-
-    // Return original name if normalized result is empty (e.g., "#" → " " → "")
-    // This ensures names like "#" still get indexed in short_name tables
-    if (!result) {
-        return name;
-    }
-
-    return result;
-}
-
-export function isShortName(name: string): boolean {
-    const normalized = normalizeNameShort(name);
-    if (!normalized) {
-        return true; // Empty/whitespace-only is considered short
-    }
-
-    const nonSpaceCount = normalized.replace(/ /g, '').length;
-    return nonSpaceCount <= MIN_TRIGRAM_CHARS;
+    return { isShort: false, name: result };
 }
 
 export { CHAR_MAP, MIN_TRIGRAM_CHARS };

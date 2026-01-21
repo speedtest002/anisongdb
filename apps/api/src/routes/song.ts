@@ -7,7 +7,7 @@ import {
     songShortNames,
     type SongFullMat,
 } from '../db/schema.js';
-import { isShortName, normalizeName } from '../utils/normalize.js';
+import { normalizeName } from '../utils/normalize.js';
 import { SearchRequest } from '@anisongdb/shared';
 
 const songRoutes = new Hono<AppEnv>();
@@ -43,7 +43,8 @@ songRoutes.post('/search', async (c) => {
     }
     try {
         let results: SongFullMat[];
-        if (isShortName(songName)) {
+        const normalizedName = normalizeName(songName);
+        if (normalizedName.isShort) {
             results = await c.var.db
                 .select({ ...getTableColumns(songFullMat) })
                 .from(songFullMat)
@@ -54,18 +55,17 @@ songRoutes.post('/search', async (c) => {
                 .where(
                     or(
                         eq(songShortNames.name, songName),
-                        eq(songShortNames.nameNormalized, songName),
+                        eq(songShortNames.nameNormalized, normalizedName.name),
                     ),
                 )
                 .execute();
         } else {
-            const songNameNormalized = normalizeName(songName);
             results = await c.var.db
                 .select({ ...getTableColumns(songFullMat) })
                 .from(songFullMat)
                 .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
                 .where(
-                    sql`song_search MATCH ${`name:"${songName}" OR name_normalized:"${songNameNormalized}"`}`,
+                    sql`song_search MATCH ${`name:"${songName}" OR name_normalized:"${normalizedName.name}"`}`,
                 )
                 .execute();
         }
