@@ -8,6 +8,7 @@ import {
     type SongFullMat,
 } from '../db/schema.js';
 import { normalizeName } from '../utils/normalize.js';
+import { escapeFTS } from '../utils/escapefts.js';
 
 const songRoutes = new Hono<AppEnv>();
 
@@ -35,50 +36,52 @@ songRoutes.get('/annSongId/:annSongId', async (c) => {
  * parram: name
  */
 songRoutes.get('/search', async (c) => {
-    const songName = c.req.query('name')?.trim() || '';
+    const rawName = c.req.query('name')?.trim() || '';
+    if (rawName.length === 0) return c.json([]);
 
-    if (songName.length === 0) {
-        return c.json([]);
-    }
     try {
-        console.log(songName);
         let results: SongFullMat[];
-        const [isShort, nameNormalied] = normalizeName(songName);
+        const [isShort, nameNormalized] = normalizeName(rawName);
+        console.log(`Search: "${rawName}" | "${nameNormalized}"`);
         if (isShort) {
             results = await c.var.db
                 .select({ ...getTableColumns(songFullMat) })
                 .from(songFullMat)
-                .innerJoin(
-                    songShortNames,
-                    eq(songShortNames.songId, songFullMat.songId),
-                )
+                .innerJoin(songShortNames, eq(songShortNames.songId, songFullMat.songId))
                 .where(
                     or(
-                        eq(songShortNames.name, songName),
-                        eq(songShortNames.nameNormalized, nameNormalied),
+                        eq(songShortNames.name, rawName),
+                        eq(songShortNames.nameNormalized, nameNormalized),
                     ),
                 )
+                .limit(20)
                 .execute();
         } else {
+            const safeNorm = escapeFTS(nameNormalized);
+            const safeRaw = escapeFTS(rawName);
+            const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
             results = await c.var.db
                 .select({ ...getTableColumns(songFullMat) })
                 .from(songFullMat)
                 .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
                 .where(
-                    sql`song_search MATCH ${`name:"${songName}" OR name_normalized:"${nameNormalied}"`}`,
+                    sql`song_search MATCH ${ftsQuery}`
                 )
+                .orderBy(sql`rank`) 
+                .limit(50)
                 .execute();
         }
 
         const response = results.map((song) => ({
-            ...song,
-            animeGenres: song.animeGenres?.split('|') ?? [],
-            animeTags: song.animeTags?.split('|') ?? [],
-            animeAltNames: song.animeAltNames?.split('|') ?? [],
+             ...song,
+             animeGenres: song.animeGenres?.split('|') ?? [],
+             animeTags: song.animeTags?.split('|') ?? [],
+             animeAltNames: song.animeAltNames?.split('|') ?? [],
         }));
         return c.json(response);
+
     } catch (error) {
-        console.error('lỗi: ', error);
+        console.error('Search error:', error);
         return c.json({ error: 'Internal Server Error' }, 500);
     }
 });
