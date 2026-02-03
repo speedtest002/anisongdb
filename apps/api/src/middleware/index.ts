@@ -13,13 +13,10 @@ export { errorHandler } from './error-handler';
 export { requestLogger, requestTiming } from './logger';
 
 // Caching
-export { cacheControl, noCache } from './cache';
+export { cacheControl, dailyCache, noCache } from './cache';
 
 // Security
 export { securityHeaders, customCors } from './security';
-
-// Rate limiting
-export { rateLimiter, cleanupRateLimitStore } from './rate-limiter';
 
 // Validation
 export { validateJson, validateQuery } from './validation';

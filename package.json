@@ -12,7 +12,8 @@
         "build:web": "bun run --filter ./apps/web build"
     },
     "devDependencies": {
-        "typescript": "^5.7.2"
+        "typescript": "^5.7.2",
+        "wrangler": "^4.60.0"
     },
     "dependencies": {
         "drizzle-orm": "^0.45.1"

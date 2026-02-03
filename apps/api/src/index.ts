@@ -4,15 +4,20 @@ import type { AppEnv } from './types.js';
 import pkg from '../package.json';
 
 // Middleware
-import { databaseMiddleware, errorHandler } from './middleware/index.js';
+import {
+    databaseMiddleware,
+    errorHandler,
+    requestLogger,
+} from './middleware/index.js';
 
 // Routes
-import { songRoutes } from './routes/index.js';
+import { songRoutes, animeRoutes } from './routes/index.js';
 
 const app = new Hono<AppEnv>();
 
 app.onError(errorHandler);
 app.use('*', cors());
+app.use('*', requestLogger);
 app.use('*', databaseMiddleware);
 
 app.get('/api', (c) => {
@@ -22,7 +27,8 @@ app.get('/api', (c) => {
     });
 });
 
-// routes 
+// routes
 app.route('/api/song', songRoutes);
+app.route('/api/anime', animeRoutes);
 
 export default app;
