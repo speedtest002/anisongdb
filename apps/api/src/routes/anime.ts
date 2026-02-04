@@ -3,8 +3,8 @@ import { sql, eq, or, getTableColumns } from 'drizzle-orm';
 import type { AppEnv } from '../types.js';
 import {
     songFullMat,
-    songSearch,
-    songShortNames,
+    animeSearch,
+    animeShortNames,
     type SongFullMat,
 } from '../db/schema.js';
 import { normalizeName } from '../utils/normalize.js';
@@ -12,40 +12,39 @@ import { escapeFTS } from '../utils/escapefts.js';
 import { transformSongFullMat } from '../utils/transform.js';
 import { dailyCache } from '../middleware/index.js';
 
-const songRoutes = new Hono<AppEnv>();
+const animeRoutes = new Hono<AppEnv>();
 
-// Get single song by annSongId
-songRoutes.get('/annSongId/:annSongId', dailyCache(6), async (c) => {
-    const annSongId = Number(c.req.param('annSongId'));
+/**
+ * GET /anime
+ * param: annId
+ */
+animeRoutes.get('/', dailyCache(6), async (c) => {
+    const annId = Number(c.req.query('annId'));
 
-    if (isNaN(annSongId)) {
-        return c.json({ error: 'Invalid annSongId' }, 400);
+    if (isNaN(annId)) {
+        return c.json({ error: 'Invalid annId' }, 400);
     }
 
     try {
         const result = await c.var.db
             .select()
             .from(songFullMat)
-            .where(eq(songFullMat.annSongId, annSongId))
-            .get();
+            .where(eq(songFullMat.annId, annId))
+            .all();
 
-        if (!result) {
-            return c.json(null);
-        }
-
-        const response = transformSongFullMat(result);
+        const response = result.map(transformSongFullMat);
         return c.json(response);
     } catch (error) {
-        console.error('Song fetch error:', error);
+        console.error('Anime fetch error:', error);
         return c.json({ error: 'Internal Server Error' }, 500);
     }
 });
 
 /**
- * GET /song/search
+ * GET /anime/search
  * param: name
  */
-songRoutes.get('/search', dailyCache(6), async (c) => {
+animeRoutes.get('/search', dailyCache(6), async (c) => {
     const rawName = c.req.query('name')?.trim() || '';
     if (rawName.length === 0) return c.json([]);
 
@@ -63,13 +62,13 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
             })
             .from(songFullMat)
             .innerJoin(
-                songShortNames,
-                eq(songShortNames.songId, songFullMat.songId),
+                animeShortNames,
+                eq(animeShortNames.annId, songFullMat.annId),
             )
             .where(
                 or(
-                    eq(songShortNames.name, rawName),
-                    eq(songShortNames.nameNormalized, nameNormalized),
+                    eq(animeShortNames.name, rawName),
+                    eq(animeShortNames.nameNormalized, nameNormalized),
                 ),
             );
         const queryLong = c.var.db
@@ -79,8 +78,8 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
                 rank: sql<number>`rank`.as('rank'),
             })
             .from(songFullMat)
-            .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
-            .where(sql`song_search MATCH ${ftsQuery}`);
+            .innerJoin(animeSearch, eq(animeSearch.annId, songFullMat.annId))
+            .where(sql`anime_search MATCH ${ftsQuery}`);
 
         const results = await queryShort
             .union(queryLong)
@@ -95,4 +94,4 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
     }
 });
 
-export { songRoutes };
+export { animeRoutes };
