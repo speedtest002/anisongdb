@@ -1,0 +1,7 @@
+{
+    "name": "anisongdb-web",
+    "compatibility_date": "2025-03-07",
+    "compatibility_flags": ["nodejs_compat"],
+    "vars": {
+    }
+}

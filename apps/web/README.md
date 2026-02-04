@@ -1,75 +1,43 @@
-# Nuxt Minimal Starter
+# Astro Starter Kit: Minimal
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
-
-## Setup
-
-Make sure to install dependencies:
-
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+```sh
+bun create astro@latest -- --template minimal
 ```
 
-## Development Server
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-Start the development server on `http://localhost:3000`:
+## 🚀 Project Structure
 
-```bash
-# npm
-npm run dev
+Inside of your Astro project, you'll see the following folders and files:
 
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+```text
+/
+├── public/
+├── src/
+│   └── pages/
+│       └── index.astro
+└── package.json
 ```
 
-## Production
+Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
 
-Build the application for production:
+There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
 
-```bash
-# npm
-npm run build
+Any static assets, like images, can be placed in the `public/` directory.
 
-# pnpm
-pnpm build
+## 🧞 Commands
 
-# yarn
-yarn build
+All commands are run from the root of the project, from a terminal:
 
-# bun
-bun run build
-```
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `bun install`             | Installs dependencies                            |
+| `bun dev`             | Starts local dev server at `localhost:4321`      |
+| `bun build`           | Build your production site to `./dist/`          |
+| `bun preview`         | Preview your build locally, before deploying     |
+| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `bun astro -- --help` | Get help using the Astro CLI                     |
 
-Locally preview production build:
+## 👀 Want to learn more?
 
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
