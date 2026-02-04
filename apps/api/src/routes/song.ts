@@ -50,37 +50,32 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
     if (rawName.length === 0) return c.json([]);
 
     try {
-        let results: SongFullMat[];
         const [isShort, nameNormalized] = normalizeName(rawName);
-        if (isShort) {
-            results = await c.var.db
-                .select({ ...getTableColumns(songFullMat) })
-                .from(songFullMat)
-                .innerJoin(
-                    songShortNames,
-                    eq(songShortNames.songId, songFullMat.songId),
-                )
-                .where(
-                    or(
-                        eq(songShortNames.name, rawName),
-                        eq(songShortNames.nameNormalized, nameNormalized),
-                    ),
-                )
-                .limit(20)
-                .all();
-        } else {
-            const safeNorm = escapeFTS(nameNormalized);
-            const safeRaw = escapeFTS(rawName);
-            const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
-            results = await c.var.db
-                .select({ ...getTableColumns(songFullMat) })
-                .from(songFullMat)
-                .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
-                .where(sql`song_search MATCH ${ftsQuery}`)
-                .orderBy(sql`rank`)
-                .limit(500)
-                .all();
-        }
+        const safeNorm = escapeFTS(nameNormalized);
+        const safeRaw = escapeFTS(rawName);
+        const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
+
+        const queryShort = c.var.db
+            .select({ ...getTableColumns(songFullMat) })
+            .from(songFullMat)
+            .innerJoin(
+                songShortNames,
+                eq(songShortNames.songId, songFullMat.songId),
+            )
+            .where(
+                or(
+                    eq(songShortNames.name, rawName),
+                    eq(songShortNames.nameNormalized, nameNormalized),
+                ),
+            );
+        const queryLong = c.var.db
+            .select({ ...getTableColumns(songFullMat) })
+            .from(songFullMat)
+            .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
+            .where(sql`song_search MATCH ${ftsQuery}`)
+            .orderBy(sql`rank`)
+
+        const results = await queryShort.union(queryLong).all();
 
         const response = results.map(transformSongFullMat);
         return c.json(response);

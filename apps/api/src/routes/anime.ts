@@ -30,7 +30,7 @@ animeRoutes.get('/', dailyCache(6), async (c) => {
             .select()
             .from(songFullMat)
             .where(eq(songFullMat.annId, annId))
-            .execute();
+            .all();
 
         const response = result.map(transformSongFullMat);
         return c.json(response);
@@ -42,46 +42,40 @@ animeRoutes.get('/', dailyCache(6), async (c) => {
 
 /**
  * GET /anime/search
- * parram: name
+ * param: name
  */
 animeRoutes.get('/search', dailyCache(6), async (c) => {
     const rawName = c.req.query('name')?.trim() || '';
     if (rawName.length === 0) return c.json([]);
 
     try {
-        let results: SongFullMat[];
         const [isShort, nameNormalized] = normalizeName(rawName);
-        if (isShort) {
-            results = await c.var.db
-                .select({ ...getTableColumns(songFullMat) })
-                .from(songFullMat)
-                .innerJoin(
-                    animeShortNames,
-                    eq(animeShortNames.annId, songFullMat.annId),
-                )
-                .where(
-                    or(
-                        eq(animeShortNames.name, rawName),
-                        eq(animeShortNames.nameNormalized, nameNormalized),
-                    ),
-                )
-                .all();
-        } else {
-            const safeNorm = escapeFTS(nameNormalized);
-            const safeRaw = escapeFTS(rawName);
-            const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
-            results = await c.var.db
-                .select({ ...getTableColumns(songFullMat) })
-                .from(songFullMat)
-                .innerJoin(
-                    animeSearch,
-                    eq(animeSearch.annId, songFullMat.annId),
-                )
-                .where(sql`anime_search MATCH ${ftsQuery}`)
-                .groupBy(songFullMat.annSongId)
-                .orderBy(songFullMat.annId, songFullMat.annSongId)
-                .all();
-        }
+        const safeNorm = escapeFTS(nameNormalized);
+        const safeRaw = escapeFTS(rawName);
+        const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
+
+        const queryShort = c.var.db
+            .select({ ...getTableColumns(songFullMat) })
+            .from(songFullMat)
+            .innerJoin(
+                animeShortNames,
+                eq(animeShortNames.annId, songFullMat.annId),
+            )
+            .where(
+                or(
+                    eq(animeShortNames.name, rawName),
+                    eq(animeShortNames.nameNormalized, nameNormalized),
+                ),
+            );
+        const queryLong = c.var.db
+            .select({ ...getTableColumns(songFullMat) })
+            .from(songFullMat)
+            .innerJoin(animeSearch, eq(animeSearch.annId, songFullMat.annId))
+            .where(sql`anime_search MATCH ${ftsQuery}`)
+            .groupBy(songFullMat.annSongId)
+            .orderBy(sql`rank`);
+
+        const results = await queryShort.union(queryLong).all();
 
         const response = results.map(transformSongFullMat);
         return c.json(response);
