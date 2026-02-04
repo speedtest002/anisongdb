@@ -55,7 +55,11 @@ animeRoutes.get('/search', dailyCache(6), async (c) => {
         const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
 
         const queryShort = c.var.db
-            .select({ ...getTableColumns(songFullMat) })
+            .select({
+                ...getTableColumns(songFullMat),
+                sortKey: sql<number>`0`.as('sort_key'),
+                rank: sql<number>`0`.as('rank'),
+            })
             .from(songFullMat)
             .innerJoin(
                 animeShortNames,
@@ -68,14 +72,19 @@ animeRoutes.get('/search', dailyCache(6), async (c) => {
                 ),
             );
         const queryLong = c.var.db
-            .select({ ...getTableColumns(songFullMat) })
+            .select({
+                ...getTableColumns(songFullMat),
+                sortKey: sql<number>`1`.as('sort_key'),
+                rank: sql<number>`rank`.as('rank'),
+            })
             .from(songFullMat)
             .innerJoin(animeSearch, eq(animeSearch.annId, songFullMat.annId))
-            .where(sql`anime_search MATCH ${ftsQuery}`)
-            .groupBy(songFullMat.annSongId)
-            .orderBy(sql`rank`);
+            .where(sql`anime_search MATCH ${ftsQuery}`);
 
-        const results = await queryShort.union(queryLong).all();
+        const results = await queryShort
+            .union(queryLong)
+            .orderBy(sql`sort_key`, sql`rank`)
+            .all();
 
         const response = results.map(transformSongFullMat);
         return c.json(response);

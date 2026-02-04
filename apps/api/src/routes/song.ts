@@ -43,7 +43,7 @@ songRoutes.get('/annSongId/:annSongId', dailyCache(6), async (c) => {
 
 /**
  * GET /song/search
- * parram: name
+ * param: name
  */
 songRoutes.get('/search', dailyCache(6), async (c) => {
     const rawName = c.req.query('name')?.trim() || '';
@@ -56,7 +56,11 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
         const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
 
         const queryShort = c.var.db
-            .select({ ...getTableColumns(songFullMat) })
+            .select({
+                ...getTableColumns(songFullMat),
+                sortKey: sql<number>`0`.as('sort_key'),
+                rank: sql<number>`0`.as('rank'),
+            })
             .from(songFullMat)
             .innerJoin(
                 songShortNames,
@@ -69,13 +73,19 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
                 ),
             );
         const queryLong = c.var.db
-            .select({ ...getTableColumns(songFullMat) })
+            .select({
+                ...getTableColumns(songFullMat),
+                sortKey: sql<number>`1`.as('sort_key'),
+                rank: sql<number>`rank`.as('rank'),
+            })
             .from(songFullMat)
             .innerJoin(songSearch, eq(songSearch.rowid, songFullMat.songId))
-            .where(sql`song_search MATCH ${ftsQuery}`)
-            .orderBy(sql`rank`)
+            .where(sql`song_search MATCH ${ftsQuery}`);
 
-        const results = await queryShort.union(queryLong).all();
+        const results = await queryShort
+            .union(queryLong)
+            .orderBy(sql`sort_key`, sql`rank`)
+            .all();
 
         const response = results.map(transformSongFullMat);
         return c.json(response);
