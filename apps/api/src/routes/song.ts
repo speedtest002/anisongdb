@@ -11,6 +11,7 @@ import { normalizeName } from '../utils/normalize.js';
 import { escapeFTS } from '../utils/escapefts.js';
 import { transformSongFullMat } from '../utils/transform.js';
 import { dailyCache } from '../middleware/index.js';
+import type { Song } from '@anisongdb/shared';
 
 const songRoutes = new Hono<AppEnv>();
 
@@ -33,7 +34,7 @@ songRoutes.get('/annSongId/:annSongId', dailyCache(6), async (c) => {
             return c.json(null);
         }
 
-        const response = transformSongFullMat(result);
+        const response: Song = transformSongFullMat(result);
         return c.json(response);
     } catch (error) {
         console.error('Song fetch error:', error);
@@ -87,7 +88,7 @@ songRoutes.get('/search', dailyCache(6), async (c) => {
             .orderBy(sql`sort_key`, sql`rank`)
             .all();
 
-        const response = results.map(transformSongFullMat);
+        const response: Song[] = results.map(transformSongFullMat);
         return c.json(response);
     } catch (error) {
         console.error('Search error:', error);

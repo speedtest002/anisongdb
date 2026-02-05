@@ -1,69 +1,43 @@
-export interface SongFull {
-    annId: number,
-    annSongId: number,
-    amqSongId: number,
-    animeENName: string,
-    animeJPName: string,
-    animeAltName: null,
-    animeVintage: string,
-    linked_ids: {
-        myanimelist: number,
-        anidb: number,
-        anilist: number,
-        kitsu: number
-    },
-    animeType: string,
-    animeCategory: string,
-    songType: string,
-    songName: string,
-    songArtist: string,
-    songComposer: string,
-    songArranger: string,
-    songDifficulty: number,
-    songCategory: string,
-    songLength: number,
-    isDub: boolean,
-    isRebroadcast: boolean,
-    HQ: string | null,
-    MQ: string | null,
-    audio: string | null,
-    artists: [
-        {
-            id: number,
-            names: string,
-        }
-    ],
-    composers: [
-        {
-            id: number,
-            names: string,
-        }
-    ],
-    arrangers: [
-        {
-            id: number,
-            names: string,
-        }
-    ]
-}
+export interface Song {
+    annSongId: number;
+    songId: number;
+    annId: number;
+    malId: number | null;
+    anilistId: number | null;
+    kitsuId: number | null;
+    animeYear: number | null;
+    animeSeasonId: number | null;
+    animeSeasonText: string | null;
+    animeNameJa: string | null;
+    animeNameEn: string | null;
+    animeAltNames: string[];
+    animeType: string | null;
+    animeCategory: string | null;
+    animeGenres: string[];
+    animeTags: string[];
+    songName: string | null;
+    songTypeName: string | null;
+    songArtist: string | null;
+    songComposer: string | null;
+    songArranger: string | null;
+    songTypeId: number;
+    songTypeNumber: number | null;
+    songCategory: number | null;
+    songArtistId: number | null;
+    songGroupId: number | null;
+    composerArtistId: number | null;
+    composerGroupId: number | null;
+    arrangerArtistId: number | null;
+    arrangerGroupId: number | null;
+    songLength: number | null;
+    isUploaded: number; // 0 or 1
+    isDub: number; // 0 or 1
+    isRebroadcast: number; // 0 or 1
+    hq: string | null;
+    mq: string | null;
+    audio: string | null;
+    difficulty: number | null;
 
-export interface SongShort {
-    annSongId: number,
-    annId: number,
-    malId: number,
-    animeNameJa: string | null,
-    animeNameEn: string | null,
-    songType: string,
-    songId: number,
-    songName: string,
-    artistName: string,
-    composerName: string | null,
-    arrangerName: string | null,
-    rebroadcast: number,
-    dub: number,
-    hq: string | null,
-    mq: string | null,
-    audio: string | null,
-    difficulty: number | null,
-    length: number | null
+    sortKey?: number;
+    rank?: number;
 }
