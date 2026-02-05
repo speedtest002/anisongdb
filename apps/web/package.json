@@ -6,11 +6,12 @@
         "dev": "astro dev",
         "build": "astro build",
         "preview": "astro preview",
-        "astro": "astro"
+        "astro": "astro",
+        "typecheck": "astro check"
     },
     "dependencies": {
-        "astro": "^5.17.1",
         "@astrojs/cloudflare": "^12.6.12",
-        "@clerk/astro": "^2.17.0"
+        "@clerk/astro": "^2.17.0",
+        "astro": "^5.17.1"
     }
 }

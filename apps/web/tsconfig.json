@@ -1,15 +1,14 @@
 {
-  "extends": "astro/tsconfigs/strict",
+  "extends": "../../node_modules/astro/tsconfigs/strict.json",
   "compilerOptions": {
-
     // import X from '../../components/Header.astro' -> import X from '@/components/Header.astro'
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
-
     "verbatimModuleSyntax": true,
-    
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
@@ -17,5 +16,8 @@
     ".astro/types.d.ts",
     "**/*"
   ],
-  "exclude": ["dist", "node_modules"]
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

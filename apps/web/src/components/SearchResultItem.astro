@@ -1,0 +1,251 @@
+---
+interface Props {
+  song: {
+    annId: number;
+    animeNameEn?: string;
+    animeNameJa?: string;
+    songName: string;
+    songArtist?: string;
+    songTypeName?: string;
+    songComposer?: string;
+    songArranger?: string;
+    difficulty?: number;
+    hq?: string;
+    audio?: string;
+  };
+}
+
+const { song } = Astro.props;
+---
+
+<div class="search-result-item">
+  <div class="item-main">
+    <div class="anime-info">
+      <span class="ann-id">#{song.annId}</span>
+      <h3 class="anime-name" title={song.animeNameEn || song.animeNameJa}>{song.animeNameEn || song.animeNameJa || "Unknown Anime"}</h3>
+    </div>
+    
+    <div class="song-info">
+      <div class="song-meta">
+        <span class="song-type">{song.songTypeName || "N/A"}</span>
+        <h4 class="song-name">{song.songName}</h4>
+      </div>
+      <p class="artist-name">by {song.songArtist || "Unknown Artist"}</p>
+    </div>
+  </div>
+
+  <div class="item-details">
+    <div class="staff-info">
+      <div class="staff-item">
+        <span class="label">Composer</span>
+        <span class="value" title={song.songComposer}>{song.songComposer || "—"}</span>
+      </div>
+      <div class="staff-item">
+        <span class="label">Arranger</span>
+        <span class="value" title={song.songArranger}>{song.songArranger || "—"}</span>
+      </div>
+    </div>
+
+    <div class="stats-info">
+      <div class="quality-badges">
+        {song.hq && <span class="badge hq">HQ</span>}
+        {song.audio && <span class="badge audio">AUD</span>}
+      </div>
+      {song.difficulty !== undefined && (
+        <div class="difficulty-wrapper">
+          <span class="label">Difficulty</span>
+          <span class="difficulty-value">{song.difficulty.toFixed(0)}%</span>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+<style>
+  .search-result-item {
+    background: #181818;
+    border-radius: 0.5rem;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .search-result-item:hover {
+    background: #232323;
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .item-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0; /* Allow text truncate */
+  }
+
+  .anime-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .ann-id {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: rgba(29, 185, 84, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+  }
+
+  .anime-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .song-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .song-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .song-type {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .song-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .artist-name {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .item-details {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex-shrink: 0;
+  }
+
+  .staff-info {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .staff-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 100px;
+  }
+
+  .label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .value {
+    font-size: 0.8125rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stats-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    min-width: 80px;
+  }
+
+  .quality-badges {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .badge {
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .badge.hq { 
+    background: rgba(29, 185, 84, 0.1); 
+    color: var(--color-primary); 
+    border: 1px solid rgba(29, 185, 84, 0.2);
+  }
+
+  .badge.audio { 
+    background: rgba(255, 255, 255, 0.05); 
+    color: white; 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .difficulty-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .difficulty-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fbbf24;
+  }
+
+  @media (max-width: 900px) {
+    .search-result-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+    
+    .item-details {
+      width: 100%;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .staff-info {
+        flex: 1;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .staff-info {
+        display: none;
+    }
+  }
+</style>

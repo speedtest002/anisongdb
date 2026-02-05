@@ -4,7 +4,7 @@ import clerk from '@clerk/astro';
 
 // https://astro.build/config
 export default defineConfig({
-    output: 'server',
-    adapter: cloudflare(),
-    integrations: [clerk()],
+  output: 'server',
+  adapter: cloudflare(),
+  integrations: [clerk()],
 });

@@ -1,0 +1,30 @@
+---
+import SongCard from './SongCard.astro';
+
+interface Props {
+  songs: any[];
+}
+
+const { songs } = Astro.props;
+---
+
+<div class="song-grid">
+  {songs.map(song => (
+    <SongCard song={song} />
+  ))}
+</div>
+
+<style>
+  .song-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .song-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+</style>

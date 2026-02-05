@@ -1,12 +1,161 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import SongList from '../components/SongList.astro';
+
+const mockupSongs = [
+  {
+    songName: "Only My Railgun",
+    animeNameEn: "A Certain Scientific Railgun",
+    songArtist: "fripSide",
+    songTypeName: "OP1",
+    hq: "true",
+    audio: "true",
+    difficulty: 85
+  },
+  {
+    songName: "Gurenge",
+    animeNameEn: "Demon Slayer: Kimetsu no Yaiba",
+    songArtist: "LiSA",
+    songTypeName: "OP1",
+    hq: "true",
+    audio: "true",
+    difficulty: 72
+  },
+  {
+    songName: "Cruel Angel's Thesis",
+    animeNameEn: "Neon Genesis Evangelion",
+    songArtist: "Yoko Takahashi",
+    songTypeName: "OP",
+    hq: "true",
+    audio: "true",
+    difficulty: 90
+  }
+];
 ---
 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Hello World</title>
-</head>
-<body>
-    <h1>Hello World</h1>
-</body>
-</html>
+<Layout title="Anisong Music Player">
+  <div class="dashboard">
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2>Your Library</h2>
+        <a href="/library" class="view-all">View All</a>
+      </div>
+      <div class="playlist-grid">
+        <div class="playlist-card">
+          <div class="artwork-mockup"></div>
+          <h3>Recent Listened</h3>
+          <p>42 Songs</p>
+        </div>
+        <div class="playlist-card">
+          <div class="artwork-mockup favorite"></div>
+          <h3>Favorites</h3>
+          <p>128 Songs</p>
+        </div>
+        <div class="playlist-card">
+          <div class="artwork-mockup anime"></div>
+          <h3>Anime Mix</h3>
+          <p>15 Songs</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-section">
+      <div class="section-header">
+        <h2>Recommended for You</h2>
+      </div>
+      <SongList songs={mockupSongs} />
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem;
+  }
+
+  .playlist-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 1024px) {
+    .playlist-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .playlist-card {
+    background: #181818;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .playlist-card:hover {
+    background: #282828;
+  }
+
+  .artwork-mockup {
+    width: 48px;
+    height: 48px;
+    background: #2a2a2a;
+    border-radius: 0.25rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+
+  .artwork-mockup.favorite { background: linear-gradient(135deg, #4f46e5, #9333ea); }
+  .artwork-mockup.anime { background: linear-gradient(135deg, #0ea5e9, #22c55e); }
+
+  .playlist-card h3 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0;
+  }
+
+  .playlist-card p {
+    display: none;
+  }
+
+  .dashboard-section {
+    margin-bottom: 3rem;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.04em;
+  }
+
+  .view-all {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .view-all:hover {
+    color: white;
+    text-decoration: none;
+  }
+</style>

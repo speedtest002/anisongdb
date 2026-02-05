@@ -1,9 +1,17 @@
 ---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
 interface Props {
-    title: string;
+  title: string;
 }
 
 const { title } = Astro.props;
+const pathname = Astro.url.pathname;
+const isHome = pathname === '/';
+const isSearch = pathname === '/search' || pathname.startsWith('/search/');
+const isLibrary = pathname === '/library' || pathname.startsWith('/library/');
 ---
 
 <!doctype html>
@@ -17,21 +25,50 @@ const { title } = Astro.props;
         <title>{title}</title>
     </head>
     <body>
-        <slot />
+        <div class="app-container">
+            <aside class="sidebar">
+                <div class="sidebar-logo">
+                    <span class="logo-text">Anisong<span class="logo-accent">DB</span></span>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="/" class:list={["nav-item", { active: isHome }]}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        Home
+                    </a>
+                    <a href="/search" class:list={["nav-item", { active: isSearch }]}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        Search
+                    </a>
+                    <a href="/library" class:list={["nav-item", { active: isLibrary }]}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10h10V2z"/><path d="M22 14H12v10h10V14z"/><path d="M12 14H2v10h10V14z"/><path d="M22 2H12v10h10V2z"/></svg>
+                        Your Library
+                    </a>
+                </nav>
+            </aside>
+            <div class="main-content">
+                <Header />
+                <main class="page-content">
+                    <slot />
+                </main>
+                <Footer />
+            </div>
+        </div>
     </body>
 </html>
 
 <style is:global>
     :root {
-        --color-bg: #0f172a;
-        --color-bg-secondary: rgba(255, 255, 255, 0.05);
-        --color-text: #f8fafc;
-        --color-text-muted: #94a3b8;
-        --color-primary: #38bdf8;
-        --color-primary-hover: #7dd3fc;
-        --color-accent: #818cf8;
+        --color-bg: #121212;
+        --color-bg-base: #000000;
+        --color-bg-secondary: #181818;
+        --color-bg-elevated: #282828;
+        --color-text: #ffffff;
+        --color-text-muted: #b3b3b3;
+        --color-primary: #1db954;
+        --color-primary-hover: #1ed760;
+        --color-accent: #1db954;
         --color-border: rgba(255, 255, 255, 0.1);
-        --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font-sans: 'Circular Std', 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     * {
@@ -47,15 +84,74 @@ const { title } = Astro.props;
     }
 
     body {
-        min-height: 100vh;
+        margin: 0;
+        overflow: hidden;
     }
 
-    a {
+    .app-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: 100vh;
+        background: black;
+    }
+
+    .sidebar {
+        background: black;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .sidebar-logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        padding: 0 0.5rem;
+    }
+
+    .logo-accent {
         color: var(--color-primary);
-        text-decoration: none;
     }
 
-    a:hover {
-        color: var(--color-primary-hover);
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        color: var(--color-text-muted);
+        font-weight: 600;
+        transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    .nav-item:hover, .nav-item.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .main-content {
+        background: linear-gradient(to bottom, #222, var(--color-bg));
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .page-content {
+        flex: 1;
+    }
+
+    @media (max-width: 768px) {
+        .app-container {
+            grid-template-columns: 1fr;
+        }
+        .sidebar {
+            display: none;
+        }
     }
 </style>

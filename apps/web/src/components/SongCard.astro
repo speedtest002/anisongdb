@@ -1,0 +1,192 @@
+---
+interface Props {
+  song: {
+    songName: string;
+    animeNameEn?: string;
+    animeNameJa?: string;
+    songArtist?: string;
+    songTypeName?: string;
+    hq?: string;
+    mq?: string;
+    audio?: string;
+    difficulty?: number;
+  };
+}
+
+const { song } = Astro.props;
+---
+
+<div class="song-card">
+  <div class="card-artwork">
+    <div class="artwork-placeholder">
+       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+    </div>
+    <div class="card-overlay">
+      <button class="play-button" aria-label="Play">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      </button>
+    </div>
+    {song.songTypeName && <span class="type-badge">{song.songTypeName}</span>}
+  </div>
+
+  <div class="card-info">
+    <h3 class="song-title">{song.songName}</h3>
+    <p class="artist-name">{song.songArtist || "Unknown Artist"}</p>
+    <p class="anime-title">{song.animeNameEn || song.animeNameJa || "Unknown Anime"}</p>
+    
+    <div class="card-footer">
+      <div class="quality-badges">
+        {song.hq && <span class="badge hq">HQ</span>}
+        {song.audio && <span class="badge audio">AUD</span>}
+      </div>
+      {song.difficulty && <span class="difficulty">{song.difficulty.toFixed(0)}%</span>}
+    </div>
+  </div>
+</div>
+
+<style>
+  .song-card {
+    background: #181818;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    transition: background 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+    border: 1px solid transparent;
+  }
+
+  .song-card:hover {
+    background: #282828;
+  }
+
+  .card-artwork {
+    position: relative;
+    aspect-ratio: 1/1;
+    background: #2a2a2a;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .song-card:hover .card-overlay {
+    opacity: 1;
+  }
+
+  .play-button {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: none;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .song-card:hover .play-button {
+    transform: translateY(0);
+  }
+
+  .type-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    padding: 0.25rem 0.6rem;
+    border-radius: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+  }
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .song-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .artist-name {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  .anime-title {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .badge.hq { 
+    background: rgba(29, 185, 84, 0.1); 
+    color: var(--color-primary); 
+    border: 1px solid rgba(29, 185, 84, 0.3);
+    box-shadow: 0 0 10px rgba(29, 185, 84, 0.1);
+  }
+
+  .badge.audio { 
+    background: rgba(255, 255, 255, 0.05); 
+    color: #fff; 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+  }
+
+  .difficulty {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fbbf24;
+  }
+</style>

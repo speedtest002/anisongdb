@@ -1,0 +1,106 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SearchResultItem from '../components/SearchResultItem.astro';
+import { searchSongs } from '../lib/api';
+
+const q = Astro.url.searchParams.get('q') || '';
+const category = Astro.url.searchParams.get('category') || 'all';
+const type = Astro.url.searchParams.get('type') || 'all';
+
+let results = [];
+let error = null;
+
+if (q) {
+  try {
+    const allResults = await searchSongs(q, category);
+    // Client-side filtering for song type (OP/ED/INS)
+    if (type !== 'all') {
+      results = allResults.filter(s => 
+        s.songTypeName?.toLowerCase().includes(type.toLowerCase())
+      );
+    } else {
+      results = allResults;
+    }
+  } catch (e) {
+    console.error(e);
+    error = "Failed to fetch search results. Please try again later.";
+  }
+}
+---
+
+<Layout title={q ? `Search: ${q} - AnisongDB` : "Search - AnisongDB"}>
+  <div class="search-page">
+    <header class="page-header">
+      {q ? (
+        <>
+          <h1>Results for "{q}"</h1>
+          <p class="results-count">Showing {results.length} matches</p>
+        </>
+      ) : (
+        <h1>Search</h1>
+      )}
+    </header>
+
+    {error && <div class="error-message">{error}</div>}
+
+    <div class="results-list">
+      {results.length > 0 ? (
+        results.map(song => (
+          <SearchResultItem song={song} />
+        ))
+      ) : q ? (
+        <div class="empty-state">
+          <p>No songs found for your search.</p>
+        </div>
+      ) : (
+        <div class="empty-state">
+          <p>Start typing in the header to search for anime songs!</p>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .search-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  .results-count {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .empty-state, .error-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .error-message {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+  }
+</style>
