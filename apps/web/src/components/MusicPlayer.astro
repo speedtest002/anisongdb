@@ -1,0 +1,421 @@
+---
+/**
+ * Global Music Player component.
+ * Persistent across page navigations using transition:persist.
+ */
+---
+
+<div class="music-player" transition:persist="player">
+  <div class="player-container">
+    <!-- Left side: Current song info -->
+    <div class="current-track">
+      <div class="artwork-small">
+        <svg id="placeholder-art" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+      </div>
+      <div class="track-info">
+        <h4 id="player-song-title">No track selected</h4>
+        <p id="player-artist-name">Select a song to play</p>
+      </div>
+    </div>
+
+    <!-- Center side: Controls and Progress -->
+    <div class="player-controls">
+      <div class="control-buttons">
+        <button id="shuffle-btn" class="ctrl-btn sub" title="Shuffle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </button>
+        <button id="prev-btn" class="ctrl-btn" title="Previous">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+        </button>
+        <button id="play-btn" class="ctrl-btn main" title="Play/Pause">
+          <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg id="pause-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button id="next-btn" class="ctrl-btn" title="Next">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        </button>
+        <button id="repeat-btn" class="ctrl-btn sub" title="Repeat">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+      </div>
+
+      <div class="progress-container">
+        <span id="current-time">0:00</span>
+        <div class="progress-bar-wrapper">
+          <input type="range" id="timeline" min="0" max="100" value="0" step="0.1" title="Seek" />
+          <div class="progress-progress" id="progress-indicator"></div>
+        </div>
+        <span id="total-duration">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right side: Volume and Utility -->
+    <div class="player-utilities">
+      <div class="volume-container">
+        <button id="mute-btn" class="ctrl-btn sub">
+            <svg id="vol-high" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="vol-mute" class="hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+        </button>
+        <div class="volume-bar-wrapper">
+            <input type="range" id="volume-slider" min="0" max="100" value="80" title="Volume" />
+            <div class="volume-progress" id="volume-indicator"></div>
+        </div>
+      </div>
+      <button class="ctrl-btn sub" title="Queue">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Hidden Audio Element -->
+  <audio id="main-audio"></audio>
+</div>
+
+<script>
+  import { $playerState, togglePlay, setProgress, setDuration, skipNext, skipPrevious, setVolume, toggleMute, toggleShuffle, cycleRepeat } from '../store/playerStore.js';
+
+  // State
+  let isDragging = false;
+  const audio = document.getElementById('main-audio') as HTMLAudioElement;
+  const timeline = document.getElementById('timeline') as HTMLInputElement;
+  const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
+  
+  // Update UI Elements
+  const songTitle = document.getElementById('player-song-title');
+  const artistName = document.getElementById('player-artist-name');
+  const playIcon = document.getElementById('play-icon');
+  const pauseIcon = document.getElementById('pause-icon');
+  const currentTimeLabel = document.getElementById('current-time');
+  const durationLabel = document.getElementById('total-duration');
+
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Subscriptions
+  $playerState.subscribe(state => {
+    if (state.currentSong) {
+      songTitle!.innerText = state.currentSong.songName;
+      artistName!.innerText = state.currentSong.songArtist;
+      
+      // We don't have real MP3 URLs in AnisongDB results usually,
+      // so we use a fallback for testing or expect the URL in 'audio' field
+      const songUrl = state.currentSong.audio || '';
+      if (audio.src !== songUrl && songUrl) {
+          audio.src = songUrl;
+          if (state.isPlaying) audio.play();
+      }
+    }
+
+    if (state.isPlaying) {
+      if (audio.paused && audio.src) audio.play().catch(() => {
+          // Might fail if not interacted with
+          $playerState.setKey('isPlaying', false);
+      });
+      playIcon?.classList.add('hidden');
+      pauseIcon?.classList.remove('hidden');
+    } else {
+      audio.pause();
+      playIcon?.classList.remove('hidden');
+      pauseIcon?.classList.add('hidden');
+    }
+
+    if (!isDragging) {
+      const progPercent = (state.progress / state.duration) * 100 || 0;
+      timeline.value = progPercent.toString();
+      currentTimeLabel!.innerText = formatTime(state.progress);
+      durationLabel!.innerText = formatTime(state.duration);
+      (document.getElementById('progress-indicator') as HTMLElement).style.width = `${progPercent}%`;
+    }
+
+    audio.volume = state.isMuted ? 0 : state.volume;
+    volumeSlider.value = (state.volume * 100).toString();
+    (document.getElementById('volume-indicator') as HTMLElement).style.width = `${state.volume * 100}%`;
+  });
+
+  // Audio Event Listeners
+  audio.addEventListener('timeupdate', () => {
+    if (!isDragging) {
+        $playerState.setKey('progress', audio.currentTime);
+    }
+  });
+
+  audio.addEventListener('loadedmetadata', () => {
+    $playerState.setKey('duration', audio.duration);
+  });
+
+  audio.addEventListener('ended', () => {
+    skipNext();
+  });
+
+  // UI Event Listeners
+  document.getElementById('play-btn')?.addEventListener('click', togglePlay);
+  document.getElementById('prev-btn')?.addEventListener('click', skipPrevious);
+  document.getElementById('next-btn')?.addEventListener('click', skipNext);
+  document.getElementById('mute-btn')?.addEventListener('click', toggleMute);
+  document.getElementById('shuffle-btn')?.addEventListener('click', toggleShuffle);
+  document.getElementById('repeat-btn')?.addEventListener('click', cycleRepeat);
+
+  timeline.addEventListener('input', () => {
+    isDragging = true;
+    const progress = (parseFloat(timeline.value) / 100) * audio.duration;
+    currentTimeLabel!.innerText = formatTime(progress);
+    (document.getElementById('progress-indicator') as HTMLElement).style.width = `${timeline.value}%`;
+  });
+
+  timeline.addEventListener('change', () => {
+    isDragging = false;
+    const progress = (parseFloat(timeline.value) / 100) * audio.duration;
+    audio.currentTime = progress;
+    $playerState.setKey('progress', progress);
+  });
+
+  volumeSlider.addEventListener('input', () => {
+    const val = parseFloat(volumeSlider.value) / 100;
+    setVolume(val);
+  });
+
+</script>
+
+<style>
+  .music-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 90px;
+    background: #000;
+    border-top: 1px solid #282828;
+    z-index: 1000;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    color: white;
+  }
+
+  .player-container {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Left Side */
+  .current-track {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 30%;
+    min-width: 180px;
+  }
+
+  .artwork-small {
+    width: 56px;
+    height: 56px;
+    background: #282828;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #b3b3b3;
+    flex-shrink: 0;
+  }
+
+  .track-info h4 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  .track-info p {
+    font-size: 0.75rem;
+    color: #b3b3b3;
+    margin: 4px 0 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  /* Center Side */
+  .player-controls {
+    flex: 1;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, transform 0.1s;
+  }
+
+  .ctrl-btn:hover {
+    color: white;
+  }
+
+  .ctrl-btn.main {
+    width: 32px;
+    height: 32px;
+    background: white;
+    color: black;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .ctrl-btn.main:hover {
+    transform: scale(1.05);
+  }
+
+  .ctrl-btn.sub {
+      opacity: 0.7;
+  }
+
+  .ctrl-btn.sub:hover {
+      opacity: 1;
+  }
+
+  .progress-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #current-time, #total-duration {
+    font-size: 0.6875rem;
+    color: #b3b3b3;
+    min-width: 32px;
+  }
+
+  .progress-bar-wrapper {
+    flex: 1;
+    position: relative;
+    height: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .progress-bar-wrapper input[type="range"] {
+    width: 100%;
+    position: absolute;
+    z-index: 2;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .progress-bar-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: #4d4d4d;
+    border-radius: 2px;
+  }
+
+  .progress-progress {
+    position: absolute;
+    height: 4px;
+    background: white;
+    border-radius: 2px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .progress-bar-wrapper:hover .progress-progress {
+      background: var(--color-primary);
+  }
+
+  /* Right Side */
+  .player-utilities {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 30%;
+    justify-content: flex-end;
+  }
+
+  .volume-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 125px;
+  }
+
+  .volume-bar-wrapper {
+      flex: 1;
+      position: relative;
+      height: 4px;
+      display: flex;
+      align-items: center;
+  }
+
+  .volume-bar-wrapper input[type="range"] {
+      width: 100%;
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+  }
+
+  .volume-bar-wrapper::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 4px;
+      background: #4d4d4d;
+      border-radius: 2px;
+  }
+
+  .volume-progress {
+      position: absolute;
+      height: 4px;
+      background: white;
+      border-radius: 2px;
+      z-index: 1;
+      pointer-events: none;
+  }
+
+  .volume-bar-wrapper:hover .volume-progress {
+      background: var(--color-primary);
+  }
+
+  .hidden {
+      display: none !important;
+  }
+
+  @media (max-width: 768px) {
+      .player-utilities {
+          display: none;
+      }
+      .current-track {
+          width: 40%;
+      }
+      .player-controls {
+          width: 60%;
+      }
+  }
+</style>

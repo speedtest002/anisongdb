@@ -2,6 +2,8 @@
 import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import MusicPlayer from "../components/MusicPlayer.astro";
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -11,7 +13,7 @@ const { title } = Astro.props;
 const pathname = Astro.url.pathname;
 const isHome = pathname === '/';
 const isSearch = pathname === '/search' || pathname.startsWith('/search/');
-const isLibrary = pathname === '/library' || pathname.startsWith('/library/');
+const isLibrary = pathname === '/playlists' || pathname.startsWith('/playlists/');
 ---
 
 <!doctype html>
@@ -23,6 +25,7 @@ const isLibrary = pathname === '/library' || pathname.startsWith('/library/');
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="generator" content={Astro.generator} />
         <title>{title}</title>
+        <ClientRouter />
     </head>
     <body>
         <div class="app-container">
@@ -39,7 +42,7 @@ const isLibrary = pathname === '/library' || pathname.startsWith('/library/');
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         Search
                     </a>
-                    <a href="/library" class:list={["nav-item", { active: isLibrary }]}>
+                    <a href="/playlists" class:list={["nav-item", { active: isLibrary }]}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10h10V2z"/><path d="M22 14H12v10h10V14z"/><path d="M12 14H2v10h10V14z"/><path d="M22 2H12v10h10V2z"/></svg>
                         Your Library
                     </a>
@@ -52,6 +55,7 @@ const isLibrary = pathname === '/library' || pathname.startsWith('/library/');
                 </main>
                 <Footer />
             </div>
+            <MusicPlayer />
         </div>
     </body>
 </html>
@@ -140,6 +144,7 @@ const isLibrary = pathname === '/library' || pathname.startsWith('/library/');
         overflow-y: auto;
         display: flex;
         flex-direction: column;
+        padding-bottom: 90px; /* Space for the player */
     }
 
     .page-content {

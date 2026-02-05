@@ -1,0 +1,208 @@
+---
+import { PlaylistService } from '../services/playlist/playlistService.js';
+
+interface Props {
+  songId: number;
+}
+
+const { songId } = Astro.props;
+const playlists = await PlaylistService.getPlaylists();
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787/api';
+---
+
+<div class="add-to-playlist" data-song-id={songId} data-api-url={API_URL}>
+  <button class="add-btn" aria-label="Add to playlist">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+  
+  <div class="playlist-dropdown" hidden>
+    <div class="dropdown-header">Add to Playlist</div>
+    <div class="playlist-list">
+      {playlists.length > 0 ? (
+        playlists.map(playlist => (
+          <button class="playlist-item" data-playlist-id={playlist.id}>
+            {playlist.name}
+          </button>
+        ))
+      ) : (
+        <div class="no-playlists">No playlists found</div>
+      )}
+    </div>
+    <div class="dropdown-footer">
+      <button class="create-playlist-btn">Create New Playlist</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Handlers for dropdown and addition logic
+  document.querySelectorAll('.add-to-playlist').forEach(container => {
+    const btn = container.querySelector('.add-btn');
+    const dropdown = container.querySelector('.playlist-dropdown');
+    const apiUrl = (container as HTMLElement).dataset.apiUrl;
+    
+    btn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = dropdown?.hasAttribute('hidden');
+      if (isHidden) {
+        dropdown?.removeAttribute('hidden');
+        container.classList.add('is-open');
+      } else {
+        dropdown?.setAttribute('hidden', '');
+        container.classList.remove('is-open');
+      }
+    });
+
+    // Close on click outside
+    document.addEventListener('click', () => {
+      dropdown?.setAttribute('hidden', '');
+      container.classList.remove('is-open');
+    });
+
+    dropdown?.addEventListener('click', (e) => e.stopPropagation());
+
+    // Add to playlist logic
+    container.querySelectorAll('.playlist-item').forEach(item => {
+      item.addEventListener('click', async () => {
+        const songId = (container as HTMLElement).dataset.songId;
+        const playlistId = (item as HTMLElement).dataset.playlistId;
+        const btnText = (item as HTMLElement).innerText;
+        
+        if (songId && playlistId && apiUrl) {
+          try {
+            (item as HTMLElement).innerText = 'Adding...';
+            (item as HTMLElement).style.opacity = '0.5';
+            (item as HTMLElement).style.pointerEvents = 'none';
+
+            const response = await fetch(`${apiUrl}/playlist/${playlistId}/song`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ songId: parseInt(songId) })
+            });
+
+            if (response.ok) {
+              alert(`Added to ${btnText}!`);
+            } else {
+              throw new Error('Failed to add');
+            }
+          } catch (err) {
+            console.error(err);
+            alert('Failed to add song to playlist. Please try again.');
+          } finally {
+            (item as HTMLElement).innerText = btnText;
+            (item as HTMLElement).style.opacity = '1';
+            (item as HTMLElement).style.pointerEvents = 'auto';
+            dropdown?.setAttribute('hidden', '');
+          }
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .add-to-playlist {
+    position: relative;
+    display: inline-block;
+  }
+
+  .add-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .add-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+  }
+
+  .playlist-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 8px;
+    width: 200px;
+    background: #282828;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    z-index: 100;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .dropdown-header {
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .playlist-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .playlist-item {
+    width: 100%;
+    padding: 10px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #e5e5e5;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .playlist-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  .no-playlists {
+    padding: 16px;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-style: italic;
+  }
+
+  .dropdown-footer {
+    padding: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .create-playlist-btn {
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .create-playlist-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-primary);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+</style>

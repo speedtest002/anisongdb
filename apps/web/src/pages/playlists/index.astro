@@ -1,0 +1,160 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { PlaylistService } from '../../services/playlist/playlistService.js';
+
+const playlists = await PlaylistService.getPlaylists();
+---
+
+<Layout title="Your Library - AnisongDB">
+  <div class="playlists-page">
+    <header class="page-header">
+      <div class="header-content">
+        <h1>Your Playlists</h1>
+        <button class="create-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Create New Playlist
+        </button>
+      </div>
+    </header>
+
+    <div class="playlists-grid">
+      {playlists.length > 0 ? (
+        playlists.map(playlist => (
+          <a href={`/playlists/${playlist.id}`} class="playlist-card">
+            <div class="playlist-artwork">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </div>
+            <div class="playlist-info">
+              <h3>{playlist.name}</h3>
+              <p>{playlist.songIds.length} Songs</p>
+            </div>
+          </a>
+        ))
+      ) : (
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <h2>Create your first playlist</h2>
+          <p>It's easy, we'll help you.</p>
+          <button class="create-btn large">Create Playlist</button>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .playlists-page {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+  }
+
+  .create-btn {
+    background: var(--color-primary);
+    color: black;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .create-btn:hover {
+    background: var(--color-primary-hover);
+    transform: scale(1.04);
+  }
+
+  .create-btn.large {
+    margin-top: 1.5rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+
+  .playlists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .playlist-card {
+    background: #181818;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background 0.3s;
+    border: 1px solid transparent;
+  }
+
+  .playlist-card:hover {
+    background: #282828;
+  }
+
+  .playlist-artwork {
+    aspect-ratio: 1/1;
+    background: #2a2a2a;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: var(--color-text-muted);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  }
+
+  .playlist-info h3 {
+    font-size: 1rem;
+    color: white;
+    margin-bottom: 0.25rem;
+  }
+
+  .playlist-info p {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 5rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 1rem;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+</style>

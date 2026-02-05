@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SearchResultItem from '../components/SearchResultItem.astro';
-import { searchSongs } from '../lib/api';
+import { searchSongs } from '../services/song/index.js';
 
 const q = Astro.url.searchParams.get('q') || '';
 const category = Astro.url.searchParams.get('category') || 'all';
