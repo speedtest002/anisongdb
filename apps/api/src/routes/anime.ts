@@ -11,6 +11,7 @@ import { normalizeName } from '../utils/normalize.js';
 import { escapeFTS } from '../utils/escapefts.js';
 import { transformSongFullMat } from '../utils/transform.js';
 import { dailyCache } from '../middleware/index.js';
+import type { AnimeSearchQuery, Song } from '@anisongdb/shared';
 
 const animeRoutes = new Hono<AppEnv>();
 
@@ -19,8 +20,8 @@ const animeRoutes = new Hono<AppEnv>();
  * param: annId
  */
 animeRoutes.get('/', dailyCache(6), async (c) => {
-    const annId = Number(c.req.query('annId'));
-
+    const query: AnimeSearchQuery = c.req.query();
+    const annId = Number(query.annId);
     if (isNaN(annId)) {
         return c.json({ error: 'Invalid annId' }, 400);
     }
@@ -32,7 +33,7 @@ animeRoutes.get('/', dailyCache(6), async (c) => {
             .where(eq(songFullMat.annId, annId))
             .all();
 
-        const response = result.map(transformSongFullMat);
+        const response: Song[] = result.map(transformSongFullMat);
         return c.json(response);
     } catch (error) {
         console.error('Anime fetch error:', error);
@@ -45,13 +46,14 @@ animeRoutes.get('/', dailyCache(6), async (c) => {
  * param: name
  */
 animeRoutes.get('/search', dailyCache(6), async (c) => {
-    const rawName = c.req.query('name')?.trim() || '';
-    if (rawName.length === 0) return c.json([]);
+    const query: AnimeSearchQuery = c.req.query();
+    const name = query.name?.trim() || '';
+    if (name.length === 0) return c.json([]);
 
     try {
-        const [isShort, nameNormalized] = normalizeName(rawName);
+        const [isShort, nameNormalized] = normalizeName(name);
         const safeNorm = escapeFTS(nameNormalized);
-        const safeRaw = escapeFTS(rawName);
+        const safeRaw = escapeFTS(name);
         const ftsQuery = `name:"${safeRaw}" OR name_normalized:"${safeNorm}"`;
 
         const queryShort = c.var.db
@@ -67,7 +69,7 @@ animeRoutes.get('/search', dailyCache(6), async (c) => {
             )
             .where(
                 or(
-                    eq(animeShortNames.name, rawName),
+                    eq(animeShortNames.name, name),
                     eq(animeShortNames.nameNormalized, nameNormalized),
                 ),
             );
@@ -86,7 +88,7 @@ animeRoutes.get('/search', dailyCache(6), async (c) => {
             .orderBy(sql`sort_key`, sql`rank`)
             .all();
 
-        const response = results.map(transformSongFullMat);
+        const response: Song[] = results.map(transformSongFullMat);
         return c.json(response);
     } catch (error) {
         console.error('Search error:', error);

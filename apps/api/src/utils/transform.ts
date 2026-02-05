@@ -1,3 +1,4 @@
+import type { Song } from '@anisongdb/shared';
 import type { SongFullMat } from '../db/schema.js';
 
 /**
@@ -5,7 +6,7 @@ import type { SongFullMat } from '../db/schema.js';
  */
 export function transformSongFullMat(
     song: SongFullMat & { sortKey?: number; rank?: number },
-) {
+): Song {
     const { sortKey, rank, ...rest } = song;
     return {
         ...rest,

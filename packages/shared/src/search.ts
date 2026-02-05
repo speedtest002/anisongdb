@@ -1,3 +1,19 @@
+/**
+ * Query parameters for song search
+ */
+export interface SongSearchQuery {
+    annSongId?: number;
+    name?: string;
+}
+
+/**
+ * Query parameters for anime search
+ */
+export interface AnimeSearchQuery {
+    annId?: number;
+    name?: string;
+}
+
 export interface SearchRequest {
     songNameSearchFilter: {
         search: string;
