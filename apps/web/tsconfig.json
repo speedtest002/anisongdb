@@ -1,23 +1,15 @@
 {
-  "extends": "../../node_modules/astro/tsconfigs/strict.json",
-  "compilerOptions": {
-    // import X from '../../components/Header.astro' -> import X from '@/components/Header.astro'
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
+    "extends": "astro/tsconfigs/strict",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"],
+            "@anisongdb/shared": ["../../packages/shared/src"],
+            "@anisongdb/shared/schema": ["../../packages/shared/src/schema"]
+        },
+        "jsx": "react-jsx",
+        "jsxImportSource": "react"
     },
-    "verbatimModuleSyntax": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
-  },
-  "include": [
-    ".astro/types.d.ts",
-    "**/*"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules"
-  ]
+    "include": [".astro/types.d.ts", "**/*"],
+    "exclude": ["dist", "node_modules"]
 }
