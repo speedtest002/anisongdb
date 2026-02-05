@@ -1,4 +1,6 @@
 ---
+import AddToPlaylist from './AddToPlaylist.astro';
+
 interface Props {
   song: {
     annId: number;
@@ -18,7 +20,12 @@ interface Props {
 const { song } = Astro.props;
 ---
 
-<div class="search-result-item">
+<div class="search-result-item" data-song={JSON.stringify(song)}>
+  <div class="play-action">
+    <button class="play-item-btn" aria-label="Play song">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    </button>
+  </div>
   <div class="item-main">
     <div class="anime-info">
       <span class="ann-id">#{song.annId}</span>
@@ -58,8 +65,29 @@ const { song } = Astro.props;
         </div>
       )}
     </div>
+
+    <div class="item-actions">
+      <AddToPlaylist songId={song.annSongId} />
+    </div>
   </div>
 </div>
+
+<script>
+  import { playSong } from '../store/playerStore.js';
+
+  document.querySelectorAll('.search-result-item').forEach(item => {
+    const playBtn = item.querySelector('.play-item-btn');
+    if (playBtn) {
+      playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const songData = JSON.parse((item as HTMLElement).dataset.song || '{}');
+        if (songData.songName) {
+            playSong(songData);
+        }
+      });
+    }
+  });
+</script>
 
 <style>
   .search-result-item {
@@ -74,7 +102,35 @@ const { song } = Astro.props;
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  .search-result-item:hover {
+  .play-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .play-item-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    transform: scale(0.8);
+  }
+
+  .search-result-item:hover .play-item-btn,
+  .search-result-item:has(.add-to-playlist.is-open) .play-item-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .play-item-btn:hover {
+    color: var(--color-primary);
+    transform: scale(1.1) !important;
+  }
+
+  .search-result-item:hover,
+  .search-result-item:has(.add-to-playlist.is-open) {
     background: #232323;
     border-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-1px);
@@ -183,9 +239,16 @@ const { song } = Astro.props;
   .stats-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
     gap: 0.5rem;
     min-width: 80px;
+  }
+
+  .item-actions {
+    display: flex;
+    align-items: center;
+    padding-left: 1rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 40px;
   }
 
   .quality-badges {

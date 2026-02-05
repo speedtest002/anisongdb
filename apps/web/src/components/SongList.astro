@@ -10,7 +10,7 @@ const { songs } = Astro.props;
 
 <div class="song-grid">
   {songs.map(song => (
-    <SongCard song={song} />
+    <SongCard song={song} songId={song.annSongId || 0} />
   ))}
 </div>
 

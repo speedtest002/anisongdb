@@ -1,0 +1,167 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SearchResultItem from '../../components/SearchResultItem.astro';
+import { PlaylistService } from '../../services/playlist/playlistService.js';
+import { getSongById } from '../../services/song/index.js';
+
+const { id } = Astro.params;
+
+if (!id) {
+    return Astro.redirect('/playlists');
+}
+
+const playlist = await PlaylistService.getPlaylistById(id);
+
+if (!playlist) {
+    return Astro.redirect('/playlists');
+}
+
+// Fetch details for all songs in the playlist
+const songs = await Promise.all(
+    playlist.songIds.map(songId => getSongById(songId))
+);
+
+const validSongs = songs.filter(s => s !== null);
+---
+
+<Layout title={`${playlist.name} - AnisongDB`}>
+  <div class="playlist-detail">
+    <header class="playlist-header">
+      <div class="playlist-artwork large">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"></path>
+          <circle cx="6" cy="18" r="3"></circle>
+          <circle cx="18" cy="16" r="3"></circle>
+        </svg>
+      </div>
+      <div class="playlist-meta">
+        <p class="type">Playlist</p>
+        <h1>{playlist.name}</h1>
+        {playlist.description && <p class="description">{playlist.description}</p>}
+        <p class="stats">{validSongs.length} songs</p>
+      </div>
+    </header>
+
+    <div class="playlist-actions">
+      <button class="play-all-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      </button>
+    </div>
+
+    <div class="songs-list">
+      {validSongs.length > 0 ? (
+        validSongs.map(song => (
+          <SearchResultItem song={song} />
+        ))
+      ) : (
+        <div class="empty-playlist">
+          <p>No songs in this playlist yet.</p>
+          <a href="/search" class="search-link">Go find some songs</a>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .playlist-detail {
+    padding: 2rem;
+  }
+
+  .playlist-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .playlist-artwork.large {
+    width: 232px;
+    height: 232px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+  }
+
+  .playlist-meta .type {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .playlist-meta h1 {
+    font-size: 6rem;
+    font-weight: 800;
+    margin: -0.5rem 0 1rem -0.25rem;
+    line-height: 1;
+  }
+
+  .playlist-meta .description {
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .playlist-meta .stats {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .playlist-actions {
+    padding: 1.5rem 0;
+    margin-bottom: 1rem;
+  }
+
+  .play-all-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: none;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  }
+
+  .play-all-btn:hover {
+    transform: scale(1.05);
+  }
+
+  .songs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .empty-playlist {
+    text-align: center;
+    padding: 4rem;
+    color: var(--color-text-muted);
+  }
+
+  .search-link {
+    color: white;
+    text-decoration: underline;
+    margin-top: 1rem;
+    display: inline-block;
+  }
+
+  @media (max-width: 900px) {
+    .playlist-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .playlist-meta h1 {
+        font-size: 3rem;
+    }
+  }
+</style>
