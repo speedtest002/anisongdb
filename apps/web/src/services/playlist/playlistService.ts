@@ -1,7 +1,6 @@
 import { fetcher } from '../../lib/fetcher.js';
 import { ENDPOINTS } from '../../lib/constants.js';
 import type { Playlist } from '../../types/playlist.js';
-import type { ApiResponse } from '../../types/api.js';
 
 export class PlaylistService {
     /**
@@ -55,7 +54,23 @@ export class PlaylistService {
             });
             return true;
         } catch (error) {
-            console.error(`Service Error: addSongToPlaylist(${playlistId}, ${songId}) failed`, error);
+            console.error(`Service Error: addSongToPlaylist failed`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Adds multiple songs to a specific playlist.
+     */
+    static async addSongsToPlaylist(playlistId: string, songIds: number[]): Promise<boolean> {
+        try {
+            await fetcher(ENDPOINTS.PLAYLIST.BULK_ADD_SONGS(playlistId), {
+                method: 'POST',
+                body: JSON.stringify({ songIds }),
+            });
+            return true;
+        } catch (error) {
+            console.error(`Service Error: addSongsToPlaylist failed`, error);
             return false;
         }
     }

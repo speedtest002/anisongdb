@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import MusicPlayer from "../components/MusicPlayer.astro";
+import Toast from "../components/Toast.astro";
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -57,6 +58,7 @@ const isLibrary = pathname === '/playlists' || pathname.startsWith('/playlists/'
             </div>
             <MusicPlayer />
         </div>
+        <Toast />
     </body>
 </html>
 

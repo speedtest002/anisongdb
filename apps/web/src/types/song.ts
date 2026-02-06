@@ -11,6 +11,15 @@ export interface SongResult {
     difficulty: number;
     hq: string;
     audio: string;
+    // Expanded Metadata
+    animeYear?: number;
+    animeSeasonText?: string;
+    animeType?: string;
+    animeCategory?: string;
+    animeGenres?: string[];
+    animeTags?: string[];
+    songLength?: number;
+    mq?: string;
 }
 
 export interface SongDetail extends SongResult {

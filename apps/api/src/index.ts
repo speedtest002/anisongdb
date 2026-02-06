@@ -11,7 +11,7 @@ import {
 } from './middleware/index.js';
 
 // Routes
-import { songRoutes, animeRoutes } from './routes/index.js';
+import { songRoutes, animeRoutes, artistRoutes, playlistRoutes } from './routes/index.js';
 
 const app = new Hono<AppEnv>();
 
@@ -30,5 +30,7 @@ app.get('/api', (c) => {
 // routes
 app.route('/api/song', songRoutes);
 app.route('/api/anime', animeRoutes);
+app.route('/api/artist', artistRoutes);
+app.route('/api/playlist', playlistRoutes);
 
 export default app;

@@ -24,7 +24,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787/api';
       {playlists.length > 0 ? (
         playlists.map(playlist => (
           <button class="playlist-item" data-playlist-id={playlist.id}>
-            {playlist.name}
+            <span class="playlist-name">{playlist.name}</span>
           </button>
         ))
       ) : (
@@ -32,74 +32,149 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787/api';
       )}
     </div>
     <div class="dropdown-footer">
+      <div class="create-playlist-form" hidden>
+        <input type="text" class="create-input" placeholder="Playlist name..." maxlength="50" />
+        <div class="form-actions">
+          <button class="cancel-create-btn">Cancel</button>
+          <button class="confirm-create-btn">Create</button>
+        </div>
+      </div>
       <button class="create-playlist-btn">Create New Playlist</button>
     </div>
   </div>
 </div>
 
 <script>
+  import { PlaylistService } from '../services/playlist/playlistService.js';
+  import { addToast } from '../store/toastStore.js';
+
   // Handlers for dropdown and addition logic
   document.querySelectorAll('.add-to-playlist').forEach(container => {
     const btn = container.querySelector('.add-btn');
     const dropdown = container.querySelector('.playlist-dropdown');
-    const apiUrl = (container as HTMLElement).dataset.apiUrl;
+    const createBtn = container.querySelector('.create-playlist-btn');
+    const createForm = container.querySelector('.create-playlist-form');
+    const createInput = container.querySelector('.create-input') as HTMLInputElement;
+    const confirmCreateBtn = container.querySelector('.confirm-create-btn');
+    const cancelCreateBtn = container.querySelector('.cancel-create-btn');
     
     btn?.addEventListener('click', (e) => {
       e.stopPropagation();
       const isHidden = dropdown?.hasAttribute('hidden');
       if (isHidden) {
+        document.querySelectorAll('.playlist-dropdown').forEach(d => d.setAttribute('hidden', ''));
         dropdown?.removeAttribute('hidden');
         container.classList.add('is-open');
+        resetForm();
       } else {
         dropdown?.setAttribute('hidden', '');
         container.classList.remove('is-open');
       }
     });
 
+    function resetForm() {
+      createForm?.setAttribute('hidden', '');
+      createBtn?.removeAttribute('hidden');
+      createInput.value = '';
+    }
+
     // Close on click outside
     document.addEventListener('click', () => {
       dropdown?.setAttribute('hidden', '');
       container.classList.remove('is-open');
+      resetForm();
     });
 
     dropdown?.addEventListener('click', (e) => e.stopPropagation());
 
-    // Add to playlist logic
-    container.querySelectorAll('.playlist-item').forEach(item => {
-      item.addEventListener('click', async () => {
-        const songId = (container as HTMLElement).dataset.songId;
-        const playlistId = (item as HTMLElement).dataset.playlistId;
-        const btnText = (item as HTMLElement).innerText;
+    // Show inline create form
+    createBtn?.addEventListener('click', () => {
+      createBtn.setAttribute('hidden', '');
+      createForm?.removeAttribute('hidden');
+      createInput.focus();
+    });
+
+    // Cancel create
+    cancelCreateBtn?.addEventListener('click', () => {
+      resetForm();
+    });
+
+    // Confirm Create logic
+    confirmCreateBtn?.addEventListener('click', async () => {
+      const name = createInput.value.trim();
+      if (!name) return;
+
+      try {
+        (confirmCreateBtn as HTMLElement).innerText = '...';
+        const newPlaylist = await PlaylistService.createPlaylist(name);
         
-        if (songId && playlistId && apiUrl) {
+        if (newPlaylist) {
+          // Add to all dropdowns on page
+          document.querySelectorAll('.playlist-list').forEach(list => {
+            const noPlaylists = list.querySelector('.no-playlists');
+            if (noPlaylists) noPlaylists.remove();
+
+            const newBtn = document.createElement('button');
+            newBtn.className = 'playlist-item';
+            newBtn.dataset.playlistId = newPlaylist.id;
+            newBtn.innerHTML = ` <span class="playlist-name">${newPlaylist.name}</span>`;
+            
+            attachPlaylistItemListener(newBtn, (list.closest('.add-to-playlist') as HTMLElement));
+            list.appendChild(newBtn);
+          });
+          
+          addToast(`Playlist "${name}" created!`);
+          resetForm();
+        }
+      } catch (err) {
+        console.error(err);
+        addToast('Failed to create playlist.', 'error');
+      } finally {
+        (confirmCreateBtn as HTMLElement).innerText = 'Create';
+      }
+    });
+
+    // Enter key to create
+    createInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirmCreateBtn?.dispatchEvent(new Event('click'));
+      if (e.key === 'Escape') resetForm();
+    });
+
+    // Initial listeners
+    container.querySelectorAll('.playlist-item').forEach(item => {
+      attachPlaylistItemListener(item as HTMLButtonElement, container as HTMLElement);
+    });
+
+    function attachPlaylistItemListener(item: HTMLButtonElement, containerEl: HTMLElement) {
+      item.addEventListener('click', async () => {
+        const songId = containerEl.dataset.songId;
+        const playlistId = item.dataset.playlistId;
+        const playlistName = item.querySelector('.playlist-name')?.innerHTML || item.innerText;
+        
+        if (songId && playlistId) {
           try {
-            (item as HTMLElement).innerText = 'Adding...';
-            (item as HTMLElement).style.opacity = '0.5';
-            (item as HTMLElement).style.pointerEvents = 'none';
+            item.classList.add('loading');
+            item.style.pointerEvents = 'none';
 
-            const response = await fetch(`${apiUrl}/playlist/${playlistId}/song`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ songId: parseInt(songId) })
-            });
+            const success = await PlaylistService.addSongToPlaylist(playlistId, parseInt(songId));
 
-            if (response.ok) {
-              alert(`Added to ${btnText}!`);
+            if (success) {
+              addToast(`Added to ${playlistName}!`);
             } else {
               throw new Error('Failed to add');
             }
           } catch (err) {
             console.error(err);
-            alert('Failed to add song to playlist. Please try again.');
+            addToast('Failed to add song to playlist.', 'error');
           } finally {
-            (item as HTMLElement).innerText = btnText;
-            (item as HTMLElement).style.opacity = '1';
-            (item as HTMLElement).style.pointerEvents = 'auto';
+            item.classList.remove('loading');
+            item.style.pointerEvents = 'auto';
             dropdown?.setAttribute('hidden', '');
+            containerEl.classList.remove('is-open');
           }
         }
       });
-    });
+    }
   });
 </script>
 
@@ -200,6 +275,85 @@ const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787/api';
   .create-playlist-btn:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: var(--color-primary);
+  }
+
+  /* Inline Form Styles */
+  .create-playlist-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .create-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: #404040;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.875rem;
+    outline: none;
+  }
+
+  .create-input:focus {
+    border-color: var(--color-primary);
+    background: #333;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .form-actions button {
+    flex: 1;
+    padding: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .cancel-create-btn {
+    background: transparent;
+    color: var(--color-text-muted);
+  }
+
+  .cancel-create-btn:hover {
+    color: white;
+  }
+
+  .confirm-create-btn {
+    background: var(--color-primary);
+    color: black;
+  }
+
+  .confirm-create-btn:hover {
+    transform: scale(1.02);
+  }
+
+  .playlist-item.loading {
+    opacity: 0.5;
+    position: relative;
+  }
+
+  .playlist-item.loading::after {
+    content: '';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border: 2px solid white;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: translateY(-50%) rotate(360deg); }
   }
 
   [hidden] {
